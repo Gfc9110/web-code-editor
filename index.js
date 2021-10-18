@@ -172,10 +172,14 @@ function interpretSpecial(event) {
   if (event.key == "Enter") {
     const focus = document.activeElement;
     if (focus.classList.contains("line")) {
-      //TODO enter when middle of line
       const line = newLine(true);
       focus.parentElement.insertBefore(line, focus.nextSibling)
       focus.nextSibling.focus();
+      if (cursor.x < focus.textContent.length) {
+        focus.nextSibling.textContent += focus.textContent.substring(cursor.x);
+        focus.textContent = focus.textContent.substring(0, cursor.x - 1);
+        SetCursorX(0)
+      }
       moveCursorDown();
       return true;
     }
@@ -184,7 +188,7 @@ function interpretSpecial(event) {
     event.preventDefault();
     return "   ";
   }
-  if (event.key == "Shift") {
+  if (event.key == "Shift" || event.key == "Control") {
     return true;
   }
   return false;
