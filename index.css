@@ -40,6 +40,7 @@ body {
     font-size: 18px;
     padding: 0 5px;
     white-space: pre;
+    cursor: text;
 }
 
 .line::after{
