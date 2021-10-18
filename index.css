@@ -28,6 +28,7 @@ body {
 }
 
 .lines {
+    position: relative;
     flex: 1 0 0;
 }
 
@@ -56,4 +57,14 @@ body {
 
 .line:focus-visible {
     outline: none;
+}
+
+.cursor {
+    position: absolute;
+    width: 1px;
+    height: 30px;
+}
+
+.editor:focus-within .cursor {
+    background: white;
 }
