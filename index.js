@@ -146,10 +146,11 @@ function interpretSpecial(event) {
         focus.textContent = focus.textContent.splice(cursor.x - 1, 1)
         moveCursorLeft();
       } else if (cursor.y > 0) {
+        SetCursorX(focus.previousSibling.textContent.length)
+        focus.previousSibling.textContent += focus.textContent
         deleteLine(cursor.y)
         moveCursorUp()
         focusLine(cursor.y)
-        SetCursorX(Infinity)
       }
       return true;
     }
@@ -177,7 +178,7 @@ function interpretSpecial(event) {
       focus.nextSibling.focus();
       if (cursor.x < focus.textContent.length) {
         focus.nextSibling.textContent += focus.textContent.substring(cursor.x);
-        focus.textContent = focus.textContent.substring(0, cursor.x - 1);
+        focus.textContent = focus.textContent.substring(0, cursor.x );
         SetCursorX(0)
       }
       moveCursorDown();
