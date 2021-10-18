@@ -21,6 +21,12 @@ function lineExists(i) {
   return !!linesContainer.childNodes[i];
 }
 
+function getEditorFileContent() {
+  let content = "";
+  Array.from(linesContainer.childNodes).forEach((line, i) => content += line.textContent + (i < linesContainer.childNodes.length - 1 ? "\n" : ""))
+  return content;
+}
+
 function focusLine(i) {
   linesContainer.childNodes[i]?.focus();
 }
@@ -178,7 +184,7 @@ function interpretSpecial(event) {
       focus.nextSibling.focus();
       if (cursor.x < focus.textContent.length) {
         focus.nextSibling.textContent += focus.textContent.substring(cursor.x);
-        focus.textContent = focus.textContent.substring(0, cursor.x );
+        focus.textContent = focus.textContent.substring(0, cursor.x);
         SetCursorX(0)
       }
       moveCursorDown();
@@ -189,7 +195,24 @@ function interpretSpecial(event) {
     event.preventDefault();
     return "   ";
   }
-  if (event.key == "Shift" || event.key == "Control") {
+  if (event.key == "F2") {
+    event.preventDefault();
+    try {
+      eval(getEditorFileContent());
+    } catch (error) {
+      console.error(error)
+    }
+    return true;
+  }
+  if (event.key == "End") {
+    SetCursorX(Infinity)
+    return true
+  }
+  if (event.key == "Home") {
+    SetCursorX(0)
+    return true
+  }
+  if (event.key.length > 1) {
     return true;
   }
   return false;
