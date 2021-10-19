@@ -2,10 +2,30 @@ const editor = document.querySelector("#mainEditor")
 const marginsContainer = editor.querySelector(".margin")
 const linesContainer = editor.querySelector(".lines")
 const cursorElement = editor.querySelector(".cursor")
+/**
+ * @type {HTMLScriptElement || null}
+ */
+let scriptElement;
 String.prototype.splice = function (index, count, add) {
   return this.slice(0, index) + (add || "") + this.slice(index + count);
 }
 let cursor = { x: 0, y: 0 }
+
+window.addEventListener("error", console.log)
+
+function addScript(content) {
+  if (scriptElement) {
+    scriptElement.remove();
+  }
+  scriptElement = document.createElement("script");
+  scriptElement.innerHTML = content
+  document.body.appendChild(scriptElement)
+}
+
+function clearScript() {
+  scriptElement?.remove();
+  scriptElement = null
+}
 
 function repositonCursor() {
   cursor.x = Math.floor(cursor.x);
@@ -197,11 +217,8 @@ function interpretSpecial(event) {
   }
   if (event.key == "F2") {
     event.preventDefault();
-    try {
-      eval(getEditorFileContent());
-    } catch (error) {
-      console.error(error)
-    }
+    //TODO find error line number??
+    addScript(getEditorFileContent())
     return true;
   }
   if (event.key == "End") {

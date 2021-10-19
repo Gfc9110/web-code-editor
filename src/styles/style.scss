@@ -1,0 +1,77 @@
+@import '/node_modules/normalize.css/normalize.css';
+
+@import 'modules/variables';
+@import 'modules/base';
+
+
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap');
+
+body {
+    margin: 0;
+    background: #1E1E1E;
+    color: white;
+    font-family: 'Roboto Mono', monospace;;
+}
+
+*,
+body {
+    box-sizing: border-box;
+}
+
+.editor {
+    display: flex;
+    height: 100%;
+}
+
+.margin {
+    flex: 0 0 60px;
+}
+
+.margin .line {
+    justify-content: center;
+    opacity: 0.5;
+    font-size: 14px;
+}
+
+.lines {
+    position: relative;
+    flex: 1 0 0;
+}
+
+.line {
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: 30px;
+    font-size: 18px;
+    padding: 0 5px;
+    white-space: pre;
+    cursor: text;
+}
+
+.line::after{
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
+.line:focus::after {
+    content: "";
+    border: 1px solid rgba(255, 255, 255, 0.397);
+}
+
+.line:focus-visible {
+    outline: none;
+}
+
+.cursor {
+    position: absolute;
+    width: 1px;
+    height: 30px;
+}
+
+.editor:focus-within .cursor {
+    background: white;
+}
