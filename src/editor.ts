@@ -2,6 +2,7 @@ export class Editor {
   cursor: Cursor;
   errorCursor: Cursor;
   script: HTMLScriptElement;
+  iframe: HTMLIFrameElement;
   static CreateMarginLine(lineNumber: number) {
     const line = document.createElement("div");
     line.className = "margin-line";
@@ -16,7 +17,6 @@ export class Editor {
   selectStart = -1;
   selectEnd = -1;
   constructor(private parent: Element) {
-    window.addEventListener("error", this.handleJSError.bind(this));
     this.element = document.createElement("div");
     this.element.className = "editor";
 
@@ -52,6 +52,11 @@ export class Editor {
 
     this.element.addEventListener("keydown", this.handleKeydown.bind(this));
     this.parent.appendChild(this.element);
+
+    this.iframe = document.createElement("iframe");
+    this.iframe.style.display = "none";
+    document.body.appendChild(this.iframe);
+    this.iframe.contentWindow.addEventListener("error", this.handleJSError.bind(this));
   }
   handleMousedown(event: MouseEvent) {
     event.preventDefault();
@@ -106,7 +111,7 @@ export class Editor {
     event.preventDefault();
     if (event.button == 0) {
       this.selecting = false;
-      console.log(this.selectedText);
+      //console.log(this.selectedText);
     }
   }
   handleKeydown(event: KeyboardEvent) {
@@ -208,9 +213,9 @@ export class Editor {
     this.errorCursor.hide();
     if (this.script)
       this.script.remove();
-    this.script = document.createElement("script");
+    this.script = this.iframe.contentDocument.createElement("script");
     this.script.innerHTML = "(()=>{\n" + this.getEditorContent() + "\n})();";
-    document.body.appendChild(this.script);
+    this.iframe.contentDocument.body.appendChild(this.script);
   }
   handleJSError(event: ErrorEvent) {
     if (!event.filename) {
