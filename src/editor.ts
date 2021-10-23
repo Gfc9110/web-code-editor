@@ -1,5 +1,7 @@
 export class Editor {
   cursor: Cursor;
+  errorCursor: Cursor;
+  script: HTMLScriptElement;
   static CreateMarginLine(lineNumber: number) {
     const line = document.createElement("div");
     line.className = "margin-line";
@@ -14,8 +16,20 @@ export class Editor {
   selectStart = -1;
   selectEnd = -1;
   constructor(private parent: Element) {
+    window.addEventListener("error", this.handleJSError.bind(this));
     this.element = document.createElement("div");
     this.element.className = "editor";
+
+    const buttons = document.createElement("div");
+    buttons.className = "buttons";
+
+    const executeButton = document.createElement("div");
+    executeButton.className = "button"
+    executeButton.textContent = "Execute JS"
+    executeButton.addEventListener("click", this.onExecute.bind(this));
+    buttons.appendChild(executeButton);
+
+    this.element.appendChild(buttons);
 
     this.margin = document.createElement("div");
     this.margin.className = "margin";
@@ -28,6 +42,9 @@ export class Editor {
     this.element.appendChild(this.linesContainer);
 
     this.cursor = new Cursor(0, 0, this);
+
+    this.errorCursor = new Cursor(0, 0, this, "red");
+    this.errorCursor.hide();
 
     this.element.addEventListener("mousedown", this.handleMousedown.bind(this))
     this.element.addEventListener("mouseup", this.handleMouseup.bind(this))
@@ -44,7 +61,7 @@ export class Editor {
       const lineElement = element.closest(".line");
       if (lineElement != null) {
         this.selecting = true;
-        this.cursor.setRow((event.clientY - this.linesContainer.clientTop) / this.rowSize)
+        this.cursor.setRow((event.clientY - this.linesContainer.getBoundingClientRect().top) / this.rowSize)
         this.focusRow(this.cursor.row)
         this.cursor.setCol(Math.min(event.offsetX / this.colSize, this.lines[this.cursor.row].text.length))
         this.lines[this.cursor.row].startSelection(this.cursor.col);
@@ -61,6 +78,7 @@ export class Editor {
     if (this.selecting && event.clientX > this.linesContainer.getBoundingClientRect().left) {
       this.cursor.setRow(Math.min((event.clientY - this.linesContainer.clientTop) / this.rowSize, this.lines.length - 1));
       this.cursor.setCol(Math.min(event.offsetX / this.colSize, this.lines[this.cursor.row].text.length))
+      this.focusRow(this.cursor.row)
       if (this.cursor.row == this.selectStart) {
         this.lines[this.cursor.row].endSelection(this.cursor.col);
       } else {
@@ -91,6 +109,7 @@ export class Editor {
     }
   }
   handleKeydown(event: KeyboardEvent) {
+    this.stopSelection();
     const element = event.target as HTMLDivElement;
     switch (event.key) {
       case "ArrowRight": {
@@ -171,7 +190,6 @@ export class Editor {
         }
         if (element.classList.contains("line")) {
           const line = this.getLineByElement(element);
-          line.stopSelection();
           if (this.cursor.col == line.text.length) {
             line.text = line.text + event.key;
             this.cursor.setCol(this.cursor.col + 1);
@@ -184,6 +202,27 @@ export class Editor {
         }
       }
     }
+  }
+  onExecute() {
+    this.errorCursor.hide();
+    if (this.script)
+      this.script.remove();
+    this.script = document.createElement("script");
+    this.script.innerHTML = "(()=>{\n"+this.getEditorContent()+"\n})();";
+    document.body.appendChild(this.script);
+  }
+  handleJSError(event: ErrorEvent) {
+    event.preventDefault();
+    this.errorCursor.setCol(event.colno - 1);
+    this.errorCursor.setRow(event.lineno - 2);
+    this.errorCursor.tooltipText = event.error;
+    this.errorCursor.show(true);
+    this.cursor.hide();
+  };
+  getEditorContent(): string {
+    let content = "";
+    this.lines.forEach((l, i) => content += (i > 0 ? "\n" : "") + l.text);
+    return content;
   }
   addLine(index: number) {
     this.lines.splice(index, 0, new Line(this, this.linesContainer.childNodes[index] as HTMLDivElement));
@@ -201,6 +240,7 @@ export class Editor {
     return this.lines.find((l) => l.element == element);
   }
   focusRow(index: number) {
+    this.cursor.show();
     this.lines[index].focus();
   }
   stopSelection() {
@@ -213,6 +253,9 @@ export class Editor {
   }
   get rowSize() {
     return 30;
+  }
+  get linesTop() {
+    return this.linesContainer.getBoundingClientRect().top;
   }
 }
 
@@ -275,9 +318,16 @@ export class Line {
 
 export class Cursor {
   element: HTMLDivElement;
-  constructor(public col = 0, public row = 0, private editor: Editor) {
+  tooltipElement: HTMLDivElement;
+  constructor(public col = 0, public row = 0, private editor: Editor, color = "#fff") {
     this.element = document.createElement("div");
     this.element.className = "cursor";
+    this.element.style.background = color;
+
+    this.tooltipElement = document.createElement("div");
+    this.tooltipElement.className = "tooltip";
+
+    this.element.appendChild(this.tooltipElement)
 
     this.update();
 
@@ -291,10 +341,26 @@ export class Cursor {
   setRow(val: number) {
     val = Math.floor(Math.max(val, 0));
     this.row = val;
-    this.element.style.top = (this.editor.rowSize * this.row) + "px";
+    this.element.style.top = this.editor.linesTop + (this.editor.rowSize * this.row) + "px";
+  }
+  hide() {
+    this.element.style.display = "none";
+    this.tooltipElement.style.display = "none";
+  }
+  show(tooltip = false) {
+    this.element.style.display = "block";
+    if(tooltip){
+      this.tooltipElement.style.display = "flex";
+    }
   }
   update() {
-    this.element.style.left = (this.editor.rowSize * this.row) + "px";
-    this.element.style.top = (this.editor.colSize * this.col) + "px";
+    this.element.style.left = (60 + 5 + (this.editor.colSize * this.col)) + "px";
+    this.element.style.top = this.editor.linesTop + (this.editor.colSize * this.col) + "px";
+  }
+  get tooltipText() {
+    return this.tooltipElement.textContent;
+  }
+  set tooltipText(val: string) {
+    this.tooltipElement.textContent = val;
   }
 }

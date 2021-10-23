@@ -21,6 +21,13 @@ body {
 .editor {
     display: flex;
     height: 100%;
+    padding-top: 30px;
+    .buttons {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+    }
 }
 
 .margin {
@@ -90,12 +97,44 @@ body {
 }
 
 .cursor {
+    display: none;
     pointer-events: none;
     position: absolute;
     width: 1px;
     height: 30px;
+    .tooltip {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        height: 30px;
+        background: red;
+        color: black;
+        align-items: center;
+        padding: 0 5px;
+        white-space: pre;
+    }
 }
 
 .editor:focus-within .cursor {
     background: white;
+}
+
+.buttons {
+    display: flex;
+    height: 30px;
+    border-bottom: 1px solid black;
+    background: #555;
+    .button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 14px;
+        padding: 0 5px;
+        cursor: default;
+        &:hover {
+            background: #666;
+        }
+    }
 }
