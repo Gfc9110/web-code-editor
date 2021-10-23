@@ -1,11 +1,13 @@
+import { divWithClass } from "./utils";
+
 export class Editor {
   cursor: Cursor;
   errorCursor: Cursor;
   script: HTMLScriptElement;
   iframe: HTMLIFrameElement;
+  console: HTMLDivElement;
   static CreateMarginLine(lineNumber: number) {
-    const line = document.createElement("div");
-    line.className = "margin-line";
+    const line = divWithClass("line");
     line.textContent = lineNumber.toString();
     return line;
   }
@@ -17,29 +19,27 @@ export class Editor {
   selectStart = -1;
   selectEnd = -1;
   constructor(private parent: Element) {
-    this.element = document.createElement("div");
-    this.element.className = "editor";
+    this.element = divWithClass("editor");
 
-    const buttons = document.createElement("div");
-    buttons.className = "buttons";
+    const buttons = divWithClass("buttons");
 
-    const executeButton = document.createElement("div");
-    executeButton.className = "button"
-    executeButton.textContent = "Execute JS"
+    const executeButton = divWithClass("button");
+    executeButton.textContent = "Run JS"
     executeButton.addEventListener("click", this.onExecute.bind(this));
     buttons.appendChild(executeButton);
 
     this.element.appendChild(buttons);
 
-    this.margin = document.createElement("div");
-    this.margin.className = "margin";
+    this.margin = divWithClass("margin");
     this.margin.appendChild(Editor.CreateMarginLine(1))
     this.element.appendChild(this.margin);
 
-    this.linesContainer = document.createElement("div");
-    this.linesContainer.className = "lines";
+    this.linesContainer = divWithClass("lines")
     this.lines.push(new Line(this));
     this.element.appendChild(this.linesContainer);
+
+    this.console = divWithClass("console");
+    this.element.appendChild(this.console);
 
     this.cursor = new Cursor(0, 0, this);
 
@@ -56,7 +56,13 @@ export class Editor {
     this.iframe = document.createElement("iframe");
     this.iframe.style.display = "none";
     document.body.appendChild(this.iframe);
+    (this.iframe.contentWindow as any).console = { log: this.internalLog.bind(this) };
     this.iframe.contentWindow.addEventListener("error", this.handleJSError.bind(this));
+  }
+  internalLog(...data: any) {
+    let consoleLine = divWithClass("line");
+    consoleLine.textContent = data.join(" ");
+    this.console.appendChild(consoleLine);
   }
   handleMousedown(event: MouseEvent) {
     event.preventDefault();
@@ -64,10 +70,10 @@ export class Editor {
       this.errorCursor.hide();
       this.stopSelection();
       const element = event.target as HTMLDivElement;
-      const lineElement = element.closest(".line");
-      if (lineElement != null) {
+      const linesElement = element.closest(".lines");
+      if (linesElement != null) {
         this.selecting = true;
-        this.cursor.setRow((event.clientY - this.linesContainer.getBoundingClientRect().top) / this.rowSize)
+        this.cursor.setRow(Math.min(event.offsetY / this.rowSize, this.lines.length - 1));
         this.focusRow(this.cursor.row)
         this.cursor.setCol(Math.min(event.offsetX / this.colSize, this.lines[this.cursor.row].text.length))
         this.lines[this.cursor.row].startSelection(this.cursor.col);
@@ -78,11 +84,11 @@ export class Editor {
   handleMousemove(event: MouseEvent) {
     event.preventDefault();
     const element = event.target as HTMLDivElement;
-    const lineElement = element.closest(".line");
-    if (lineElement != null) {
+    const linesElement = element.closest(".lines");
+    if (linesElement != null) {
     }
     if (this.selecting && event.clientX > this.linesContainer.getBoundingClientRect().left) {
-      this.cursor.setRow(Math.min((event.clientY - this.linesContainer.getBoundingClientRect().top) / this.rowSize, this.lines.length - 1));
+      this.cursor.setRow(Math.min(event.offsetY / this.rowSize, this.lines.length - 1));
       this.cursor.setCol(Math.min(event.offsetX / this.colSize, this.lines[this.cursor.row].text.length))
       this.focusRow(this.cursor.row)
       if (this.cursor.row == this.selectStart) {
@@ -212,6 +218,7 @@ export class Editor {
     }
   }
   onExecute() {
+    this.console.innerHTML = "";
     this.errorCursor.hide();
     if (this.script)
       this.script.remove();
@@ -220,14 +227,12 @@ export class Editor {
     this.iframe.contentDocument.body.appendChild(this.script);
   }
   handleJSError(event: ErrorEvent) {
-    if (!event.filename) {
-      event.preventDefault();
-      this.errorCursor.setCol(event.colno - 1);
-      this.errorCursor.setRow(event.lineno - 2);
-      this.errorCursor.tooltipText = event.error;
-      this.errorCursor.show(true);
-      this.cursor.hide();
-    }
+    event.preventDefault();
+    this.errorCursor.setCol(event.colno - 1);
+    this.errorCursor.setRow(event.lineno - 2);
+    this.errorCursor.tooltipText = event.error;
+    this.errorCursor.show(true);
+    this.cursor.hide();
   };
   getEditorContent(): string {
     let content = "";
@@ -302,16 +307,13 @@ export class Line {
   element: HTMLDivElement;
   textElement: HTMLDivElement;
   constructor(private editor: Editor, before?: HTMLDivElement) {
-    this.element = document.createElement("div");
-    this.element.className = "line";
+    this.element = divWithClass("line")
     this.element.tabIndex = 0;
 
-    this.textElement = document.createElement("div");
-    this.textElement.className = "text";
+    this.textElement = divWithClass("text");
     this.element.appendChild(this.textElement);
 
-    this.selection = document.createElement("div");
-    this.selection.className = "selection";
+    this.selection = divWithClass("selection");
     this.element.appendChild(this.selection);
 
     this.editor.linesContainer.insertBefore(this.element, before)
@@ -353,12 +355,10 @@ export class Cursor {
   element: HTMLDivElement;
   tooltipElement: HTMLDivElement;
   constructor(public col = 0, public row = 0, private editor: Editor, color = "#fff") {
-    this.element = document.createElement("div");
-    this.element.className = "cursor";
+    this.element = divWithClass("cursor");
     this.element.style.background = color;
 
-    this.tooltipElement = document.createElement("div");
-    this.tooltipElement.className = "tooltip";
+    this.tooltipElement = divWithClass("tooltip");
 
     this.element.appendChild(this.tooltipElement)
 
@@ -374,7 +374,7 @@ export class Cursor {
   setRow(val: number) {
     val = Math.floor(Math.max(val, 0));
     this.row = val;
-    this.element.style.top = this.editor.linesTop + (this.editor.rowSize * this.row) + "px";
+    this.element.style.top = 30 + (this.editor.rowSize * this.row) + "px";
   }
   hide() {
     this.element.style.display = "none";
@@ -388,7 +388,7 @@ export class Cursor {
   }
   update() {
     this.element.style.left = (60 + 5 + (this.editor.colSize * this.col)) + "px";
-    this.element.style.top = this.editor.linesTop + (this.editor.colSize * this.col) + "px";
+    this.element.style.top = 30 + (this.editor.colSize * this.col) + "px";
   }
   get tooltipText() {
     return this.tooltipElement.textContent;

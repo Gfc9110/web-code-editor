@@ -1,16 +1,16 @@
-@import '/node_modules/normalize.css/normalize.css';
+@import "/node_modules/normalize.css/normalize.css";
 
-@import 'modules/variables';
-@import 'modules/base';
+@import "modules/variables";
+@import "modules/base";
 
-
-@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap");
 
 body {
     margin: 0;
-    background: #1E1E1E;
+    background: #1e1e1e;
     color: white;
-    font-family: 'Roboto Mono', monospace;;
+    font-family: "Roboto Mono", monospace;
+    overflow-y: auto;
 }
 
 *,
@@ -20,121 +20,122 @@ body {
 
 .editor {
     display: flex;
-    height: 100%;
     padding-top: 30px;
+    overflow: hidden;
+    min-height: 100vh;
     .buttons {
-        position: absolute;
+        position: fixed;
         left: 0;
         top: 0;
         width: 100%;
-    }
-}
-
-.margin {
-    flex: 0 0 60px;
-}
-
-.margin .margin-line {
-    position: relative;
-    display: flex;
-    align-items: center;
-    height: 30px;
-    font-size: 18px;
-    padding: 0 5px;
-    white-space: pre;
-    cursor: text;
-    justify-content: center;
-    opacity: 0.5;
-    font-size: 14px;
-}
-
-.lines {
-    position: relative;
-    flex: 1 0 0;
-}
-
-.line {
-    position: relative;
-    display: flex;
-    align-items: center;
-    height: 30px;
-    font-size: 18px;
-    padding: 0 5px;
-    white-space: pre;
-    cursor: text;
-}
-
-.line::after{
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-}
-
-.line:focus::after {
-    content: "";
-    border: 1px solid rgba(255, 255, 255, 0.397);
-}
-
-.line:focus-visible {
-    outline: none;
-}
-
-.line .selection {
-    pointer-events: none;
-    display: none;
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    background: blue;
-    opacity: 0.5;
-    left: 0;
-    width: 0;
-    &.active {
-        display: block;
-    }
-}
-
-.cursor {
-    display: none;
-    pointer-events: none;
-    position: absolute;
-    width: 1px;
-    height: 30px;
-    .tooltip {
-        display: none;
-        position: absolute;
-        top: 100%;
-        left: 0;
-        height: 30px;
-        background: red;
-        color: black;
-        align-items: center;
-        padding: 0 5px;
-        white-space: pre;
-    }
-}
-
-.editor:focus-within .cursor {
-    background: white;
-}
-
-.buttons {
-    display: flex;
-    height: 30px;
-    border-bottom: 1px solid black;
-    background: #555;
-    .button {
         display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 14px;
-        padding: 0 5px;
-        cursor: default;
-        &:hover {
-            background: #666;
+        height: 30px;
+        border-bottom: 1px solid black;
+        background: #555;
+        z-index: 1;
+        .button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            padding: 0 5px;
+            cursor: default;
+            &:hover {
+                background: #666;
+            }
         }
+    }
+    .margin {
+        flex: 0 0 60px;
+        .line {
+            position: relative;
+            display: flex;
+            align-items: center;
+            height: 30px;
+            font-size: 18px;
+            padding: 0 5px;
+            white-space: pre;
+            cursor: text;
+            justify-content: center;
+            opacity: 0.5;
+            font-size: 14px;
+        }
+    }
+
+    .lines {
+        position: relative;
+        flex: 1 0 0;
+        cursor: text;
+        .line {
+            position: relative;
+            display: flex;
+            align-items: center;
+            height: 30px;
+            font-size: 18px;
+            padding: 0 5px;
+            white-space: pre;
+            pointer-events: none;
+            &::after {
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                right: 0;
+            }
+            &:focus::after {
+                content: "";
+                border: 1px solid rgba(255, 255, 255, 0.397);
+            }
+            &:focus-visible {
+                outline: none;
+            }
+            .selection {
+                pointer-events: none;
+                display: none;
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                background: blue;
+                opacity: 0.5;
+                left: 0;
+                width: 0;
+                &.active {
+                    display: block;
+                }
+            }
+        }
+    }
+    .console {
+        flex: 25% 0 0;
+        border-left: 1px solid white;
+        .line {
+            height: 30px;
+            display: flex;
+            padding: 0 5px;
+            align-items: center;
+        }
+    }
+    .cursor {
+        display: none;
+        pointer-events: none;
+        position: absolute;
+        width: 1px;
+        height: 30px;
+        .tooltip {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            height: 30px;
+            background: red;
+            color: black;
+            align-items: center;
+            padding: 0 5px;
+            white-space: pre;
+        }
+    }
+    &:focus-within .cursor {
+        background: white;
     }
 }
