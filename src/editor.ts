@@ -76,7 +76,7 @@ export class Editor {
     if (lineElement != null) {
     }
     if (this.selecting && event.clientX > this.linesContainer.getBoundingClientRect().left) {
-      this.cursor.setRow(Math.min((event.clientY - this.linesContainer.clientTop) / this.rowSize, this.lines.length - 1));
+      this.cursor.setRow(Math.min((event.clientY - this.linesContainer.getBoundingClientRect().top) / this.rowSize, this.lines.length - 1));
       this.cursor.setCol(Math.min(event.offsetX / this.colSize, this.lines[this.cursor.row].text.length))
       this.focusRow(this.cursor.row)
       if (this.cursor.row == this.selectStart) {
@@ -106,6 +106,7 @@ export class Editor {
     event.preventDefault();
     if (event.button == 0) {
       this.selecting = false;
+      console.log(this.selectedText);
     }
   }
   handleKeydown(event: KeyboardEvent) {
@@ -208,16 +209,18 @@ export class Editor {
     if (this.script)
       this.script.remove();
     this.script = document.createElement("script");
-    this.script.innerHTML = "(()=>{\n"+this.getEditorContent()+"\n})();";
+    this.script.innerHTML = "(()=>{\n" + this.getEditorContent() + "\n})();";
     document.body.appendChild(this.script);
   }
   handleJSError(event: ErrorEvent) {
-    event.preventDefault();
-    this.errorCursor.setCol(event.colno - 1);
-    this.errorCursor.setRow(event.lineno - 2);
-    this.errorCursor.tooltipText = event.error;
-    this.errorCursor.show(true);
-    this.cursor.hide();
+    if (!event.filename) {
+      event.preventDefault();
+      this.errorCursor.setCol(event.colno - 1);
+      this.errorCursor.setRow(event.lineno - 2);
+      this.errorCursor.tooltipText = event.error;
+      this.errorCursor.show(true);
+      this.cursor.hide();
+    }
   };
   getEditorContent(): string {
     let content = "";
@@ -256,6 +259,29 @@ export class Editor {
   }
   get linesTop() {
     return this.linesContainer.getBoundingClientRect().top;
+  }
+  get selectedText() {
+    let text = "";
+    if (this.selectStart >= 0 && this.selectEnd >= 0) {
+      const min = Math.min(this.selectStart, this.selectEnd);
+      const max = Math.max(this.selectStart, this.selectEnd);
+      for (let i = min; i <= max; i++) {
+        if (i == min && i == max) {
+          text += this.lines[min].text.substring(this.lines[min].selectStart, this.lines[min].selectEnd);
+          continue;
+        }
+        if (i == min) {
+          text += this.lines[min].text.substring(this.lines[min].selectStart) + "\n";
+          continue;
+        }
+        if (i == max) {
+          text += this.lines[max].text.substring(0, this.lines[min].selectEnd);
+          continue;
+        }
+        text += this.lines[i].text + "\n"
+      }
+    }
+    return text;
   }
 }
 
@@ -349,7 +375,7 @@ export class Cursor {
   }
   show(tooltip = false) {
     this.element.style.display = "block";
-    if(tooltip){
+    if (tooltip) {
       this.tooltipElement.style.display = "flex";
     }
   }
