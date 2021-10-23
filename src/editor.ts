@@ -61,6 +61,7 @@ export class Editor {
   handleMousedown(event: MouseEvent) {
     event.preventDefault();
     if (event.button == 0) {
+      this.errorCursor.hide();
       this.stopSelection();
       const element = event.target as HTMLDivElement;
       const lineElement = element.closest(".line");
@@ -195,6 +196,7 @@ export class Editor {
           break;
         }
         if (element.classList.contains("line")) {
+          this.errorCursor.hide();
           const line = this.getLineByElement(element);
           if (this.cursor.col == line.text.length) {
             line.text = line.text + event.key;
