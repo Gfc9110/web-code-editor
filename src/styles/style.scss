@@ -27,7 +27,15 @@ body {
     flex: 0 0 60px;
 }
 
-.margin .line {
+.margin .margin-line {
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: 30px;
+    font-size: 18px;
+    padding: 0 5px;
+    white-space: pre;
+    cursor: text;
     justify-content: center;
     opacity: 0.5;
     font-size: 14px;
@@ -66,7 +74,23 @@ body {
     outline: none;
 }
 
+.line .selection {
+    pointer-events: none;
+    display: none;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    background: blue;
+    opacity: 0.5;
+    left: 0;
+    width: 0;
+    &.active {
+        display: block;
+    }
+}
+
 .cursor {
+    pointer-events: none;
     position: absolute;
     width: 1px;
     height: 30px;
